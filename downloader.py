@@ -79,7 +79,7 @@ def Download_Mission(url,referer,file_name=None):
 def title_generator(title:str):
     return title.replace("\\"," ").replace('/'," ").replace(":"," ")\
         .replace("*"," ").replace("?"," ").replace("\""," ").replace("<"," ")\
-            .replace(">"," ").replace("|"," ")
+            .replace(">"," ").replace("|"," ").replace("”"," ").replace("“"," ")
 
 def FFmpegMission(VideoName,AudioName,Outputname):
     shell = "./ffmpeg.exe -i \"" + VideoName + "\" -i \"" + AudioName + \
@@ -272,6 +272,13 @@ class UP:
         print('粉丝:\t'+str(self.__follower))
 
 """交互部分"""
+title = "\
+██████╗ ██╗██╗     ██╗██████╗ ██╗██╗     ██╗    ██████╗  ██████╗ ██╗    ██╗██╗      ██████╗  █████╗ ██████╗ ███████╗██████╗ \n\
+██╔══██╗██║██║     ██║██╔══██╗██║██║     ██║    ██╔══██╗██╔═══██╗██║    ██║██║     ██╔═══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗\n\
+██████╔╝██║██║     ██║██████╔╝██║██║     ██║    ██║  ██║██║   ██║██║ █╗ ██║██║     ██║   ██║███████║██║  ██║█████╗  ██████╔╝\n\
+██╔══██╗██║██║     ██║██╔══██╗██║██║     ██║    ██║  ██║██║   ██║██║███╗██║██║     ██║   ██║██╔══██║██║  ██║██╔══╝  ██╔══██╗\n\
+██████╔╝██║███████╗██║██████╔╝██║███████╗██║    ██████╔╝╚██████╔╝╚███╔███╔╝███████╗╚██████╔╝██║  ██║██████╔╝███████╗██║  ██║\n\
+╚═════╝ ╚═╝╚══════╝╚═╝╚═════╝ ╚═╝╚══════╝╚═╝    ╚═════╝  ╚═════╝  ╚══╝╚══╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝"
 
 #主程序状态
 NORMAL = 0
@@ -303,13 +310,13 @@ class StateMachine:
         self.statetag = state
     def display(self):
         global firststart
-        if not firststart:
+        if not firststart and (not self.statetag == ADD_ITEM):
             os.system('cls')
+            #print("Bilibili downloader")
+            print(title)
         if self.statetag == NORMAL:
             if firststart:
                 firststart = False
-            else:
-                print("Bilibili downloader")
             print("待选稿件")
             index = 0
             for V in item_group:
@@ -324,6 +331,7 @@ class StateMachine:
             print("返回【X】 退出【Q】")
             print("选择要下载的P【1-%d】" % (item_group[self.SelectedIndex].pages))
         elif self.statetag == ADD_ITEM:
+            print("返回【X】 退出【Q】")
             print("输入一个av号或BV号")
         elif self.statetag == SELECT_QUALITY:
             print("可用画质")
@@ -384,6 +392,7 @@ class StateMachine:
             pickle.dump(item_group,savedata)
             savedata.close()
             os.system('cls')
+            print("脚本已退出，记录已保存至savedaata")
             os._exit(0)
         if self.statetag == NORMAL:
             if self.keyword.lower() == 'a':
@@ -394,6 +403,9 @@ class StateMachine:
             else:
                 pass
             self.keyword = ""
+            os.system('cls')
+            #print("Bilibili downloader")
+            print(title)
         elif self.statetag == ADD_ITEM:
             if self.keyword.lower() == 'x':
                 self.statetag = NORMAL
@@ -460,7 +472,8 @@ if __name__ == "__main__":
     #v.video_list[0].Flv_downloader(116)
     """
     os.system('cls')
-    print("Bilibili downloader")
+    #print("Bilibili downloader")
+    print(title)
     PATH = os.environ['PATH'].split(os.pathsep)
     Aria2_Exist = os.path.isfile("aria2c.exe")
     FFmpeg_Exist = os.path.isfile("ffmpeg.exe")
