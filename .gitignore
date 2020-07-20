@@ -127,3 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#downloadfile
+*.mp4
+*.flv
+*.aria2
+*.aac
+*.exe
+savedata
+
+#cookie
+*.sqlite
