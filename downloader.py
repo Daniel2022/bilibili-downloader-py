@@ -83,7 +83,7 @@ def title_generator(title:str):
 
 def FFmpegMission(VideoName,AudioName,Outputname):
     shell = "./ffmpeg.exe -i \"" + VideoName + "\" -i \"" + AudioName + \
-        "\" -c:v copy -c:a copy -strict experimental " + "\"" + Outputname + "\" -n"
+        "\" -c:v copy -c:a copy -strict experimental " + "\"" + Outputname + "\" -y"
     #print(shell)
     sbp = subprocess.Popen([r'powershell',shell])
     sbp.wait()
@@ -241,7 +241,7 @@ class DashUrlStruct:
             self.AVC_Url = VUrl
             self.ready = True
         else:
-            pass
+            raise MannualError(6)
 
 class UP:
     def __init__(self, mid):
@@ -279,6 +279,15 @@ title = "\
 ██╔══██╗██║██║     ██║██╔══██╗██║██║     ██║    ██║  ██║██║   ██║██║███╗██║██║     ██║   ██║██╔══██║██║  ██║██╔══╝  ██╔══██╗\n\
 ██████╔╝██║███████╗██║██████╔╝██║███████╗██║    ██████╔╝╚██████╔╝╚███╔███╔╝███████╗╚██████╔╝██║  ██║██████╔╝███████╗██║  ██║\n\
 ╚═════╝ ╚═╝╚══════╝╚═╝╚═════╝ ╚═╝╚══════╝╚═╝    ╚═════╝  ╚═════╝  ╚══╝╚══╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝"
+ErrorMeassage = "按回车返回"
+aria2ErrorMessage = "Error:Aria2未能开启下载\n可能原因：aria2c.exe不存在\n"
+ffmpegErrorMessage = "Error:ffmpeg出错\n可能原因：ffmpeg.exe不存在\n"
+APIErrorMessage = "Error:api获取错误\n可能原因：\n1.视频不可用\n2.使用非大会员帐号访问大会员专属视频\n"
+VideoNotLoadMessage = "Error:Video实例未load\n[BUG]\n"
+NotAcQnMessage = "Error:不可用画质\n[BUG]\n"
+ParaMessage = "Error:参数不可用\n[BUG]\n"
+StateErrorMessage = "Error:状态机错误\n[BUG]\n"
+InputErrorMessgae = "Error:输入错误，请重新输入"
 
 #主程序状态
 NORMAL = 0
@@ -298,6 +307,14 @@ av_pattern = re.compile(r'av[0-9]+',flags=re.I)
 BV_pattern = re.compile(r'BV[0-9A-Za-z]+')
 
 firststart = True
+
+def exitAction():
+    savedata = open('savedata','wb')
+    pickle.dump(item_group,savedata)
+    savedata.close()
+    os.system('cls')
+    print("脚本已退出，记录已保存至savedaata")
+    os._exit(0)
 
 class StateMachine:
     def __init__(self,state=NORMAL):
@@ -351,7 +368,7 @@ class StateMachine:
         elif self.statetag == HEV_DOWNLOADING:
             print("下载MP4封装HEVC编码……")
         else:
-            pass
+            raise MannualError(8)
     def action(self):
         if self.statetag == NORMAL:
             self.keyword = input()
@@ -368,8 +385,10 @@ class StateMachine:
                 print("已添加%s" % bvid.group(0))
             elif self.keyword.lower() == 'd':
                 item_group.pop(len(item_group)-1)
-            else:
+            elif self.keyword.lower() == 'x' or self.keyword.lower() == 'q':
                 pass
+            else:
+                raise MannualError(8)
         elif self.statetag == VideoInfo:
             self.keyword = input()
         elif self.statetag == SELECT_QUALITY:
@@ -385,15 +404,10 @@ class StateMachine:
         elif self.statetag == HEV_DOWNLOADING:
             item_group[self.SelectedIndex].video_list[self.SelectedPIndex].Dash_downloader(12)
         else:
-            pass
+            raise MannualError(7)
     def switch(self):
         if self.keyword == 'q':
-            savedata = open('savedata','wb')
-            pickle.dump(item_group,savedata)
-            savedata.close()
-            os.system('cls')
-            print("脚本已退出，记录已保存至savedaata")
-            os._exit(0)
+            exitAction()
         if self.statetag == NORMAL:
             if self.keyword.lower() == 'a':
                 self.statetag = ADD_ITEM
@@ -401,7 +415,7 @@ class StateMachine:
                 self.SelectedIndex = int(self.keyword)-1
                 self.statetag = VideoInfo
             else:
-                pass
+                raise MannualError(8)
             self.keyword = ""
             os.system('cls')
             #print("Bilibili downloader")
@@ -417,7 +431,7 @@ class StateMachine:
                 item_group[self.SelectedIndex].video_list[self.SelectedPIndex].load()
                 self.statetag = SELECT_QUALITY
             else:
-                pass
+                raise MannualError(8)
         elif self.statetag == SELECT_QUALITY:
             if self.keyword.lower() == 'x':
                 self.statetag = VideoInfo
@@ -425,7 +439,7 @@ class StateMachine:
                 self.SelectedQuality = item_group[self.SelectedIndex].video_list[self.SelectedPIndex].accept_quality[int(self.keyword)-1]
                 self.statetag = SELECT_CONTAINER
             else:
-                pass
+                raise MannualError(8)
         elif self.statetag == SELECT_CONTAINER:
             #print(self.statetag)
             if self.keyword.lower() == 'x':
@@ -441,7 +455,9 @@ class StateMachine:
                     else:
                         self.statetag = AVC_DOWNLOADING
                 else:
-                    pass
+                    raise MannualError(8)
+            else:
+                raise MannualError(8)
         elif self.statetag == SELECT_FORMAT:
             if self.keyword.lower() == 'x':
                 self.statetag = SELECT_CONTAINER
@@ -450,12 +466,12 @@ class StateMachine:
             elif self.keyword.lower() == 'n':
                 self.statetag = AVC_DOWNLOADING
             else:
-                pass
+                raise MannualError(8)
         elif self.statetag == AVC_DOWNLOADING or self.statetag == HEV_DOWNLOADING or \
             self.statetag == FLV_DOWNLOADING:
             self.statetag = VideoInfo
         else:
-            pass            
+            raise MannualError(7)            
 
 if __name__ == "__main__":
     
@@ -520,5 +536,28 @@ if __name__ == "__main__":
             State.display() #主程序
             State.action()
             State.switch()
-        except MannualError:
-            pass #异常处理待更
+        except MannualError as e:
+            os.system('cls')
+            if e.ErrorCode == 1:
+                print(aria2ErrorMessage)
+            elif e.ErrorCode == 2:
+                print(ffmpegErrorMessage)
+            elif e.ErrorCode == 3:
+                print(APIErrorMessage)
+            elif e.ErrorCode == 4:
+                print(VideoNotLoadMessage)
+            elif e.ErrorCode == 5:
+                print(NotAcQnMessage)
+            elif e.ErrorCode == 6:
+                print(ParaMessage)
+            elif e.ErrorCode == 7:
+                print(StateErrorMessage)
+            elif e.ErrorCode == 8:
+                print(InputErrorMessgae)
+            else:
+                print("Not Known")
+            input(ErrorMeassage)
+            if e.ErrorCode == 8:
+                pass
+            else:
+                State.statetag = NORMAL       

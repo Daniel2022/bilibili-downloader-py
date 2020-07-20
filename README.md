@@ -16,7 +16,7 @@ python downloader.py //shell
 
 * python requests 模块
 ```shell
-pip install request
+pip install requests
 ```
 ## 支持系统及python版本
 Python 3<br>

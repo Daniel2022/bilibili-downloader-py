@@ -1,0 +1,19 @@
+1: Aria2 Error
+2: FFmpeg Error
+3: API get Error
+4: Video not Load()
+5: Not accpet quality
+6: Invalid Para
+7: State Error
+8: Invalid input
+
+#主程序状态
+NORMAL = 0
+ADD_ITEM = 1
+VideoInfo = 2
+SELECT_QUALITY = 3
+SELECT_CONTAINER = 4
+FLV_DOWNLOADING = 5
+SELECT_FORMAT = 6
+AVC_DOWNLOADING = 7
+HEV_DOWNLOADING = 8
