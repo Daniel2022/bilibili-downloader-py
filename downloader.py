@@ -560,4 +560,7 @@ if __name__ == "__main__":
             if e.ErrorCode == 8:
                 pass
             else:
-                State.statetag = NORMAL       
+                State.statetag = NORMAL
+        except IndexError:
+            print("Error:索引错误")
+            input(ErrorMeassage)
