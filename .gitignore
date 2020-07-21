@@ -134,6 +134,7 @@ dmypy.json
 *.aria2
 *.aac
 *.exe
+*.pysav
 savedata
 
 #cookie
