@@ -1,5 +1,4 @@
 import requests
-import json
 import subprocess
 import http.cookiejar
 
@@ -113,7 +112,7 @@ class bili_Video:
         else:
             raise MannualError(3)
     def show(self):
-        string = "%s\nAV号：%s\nBV号：%s\nUP主：%s\nP数：%d\n\n" \
+        string = "%s\nAV号：av%s\nBV号：%s\nUP主：%s\nP数：%d\n\n" \
             % (self.title,self.avid,self.bvid,self.owner.name,self.pages)
         for i in range(self.pages):
             string += "P%d.%s\n" % (i+1,self.video_list[i].subtitle)
@@ -157,6 +156,7 @@ class Videos:
                     vformat = data['format']
                     file_name = title_generator(self.title) + "_" + str(self.page) + "_" + vformat + ".flv"
                     Download_Mission(url=url,file_name=file_name,referer=self.referer)
+                    return file_name
                 else:
                     raise MannualError(3)
             else:
@@ -208,6 +208,7 @@ class Videos:
             raise MannualError(6)
         FFmpegMission(VideoName,AudioName,Outputname)
         del self.tmp_DashUrl
+        return Outputname
     def show(self):
         string = ''
         if self.AbleToDownload:
@@ -255,9 +256,6 @@ class UP:
         else:
             raise MannualError(3)
     def show(self):
-        print('========UP主信息=======')
-        print('ID:\t'+self.name)
-        print('UID:\t'+str(self.__mid))
-        print('等级:\tlv.'+str(self.__level))
-        print('签名:\t'+self.__sign)
-        print('粉丝:\t'+str(self.__follower))
+        string = "ID:\t%s\nUID:\t%d\n等级:\tlv.%d\n签名:\t%s\n粉丝数:\t%d\n" \
+            % (self.name, self.__mid, self.__level, self.__sign, self.__follower)
+        return string

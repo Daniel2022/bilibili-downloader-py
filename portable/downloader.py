@@ -1,5 +1,4 @@
 import requests
-import json
 import subprocess
 import os
 import http.cookiejar
@@ -122,7 +121,7 @@ class bili_Video:
         else:
             raise MannualError(3)
     def show(self):
-        string = "%s\nAV号：%s\nBV号：%s\nUP主：%s\nP数：%d\n\n" \
+        string = "%s\nAV号：av%s\nBV号：%s\nUP主：%s\nP数：%d\n\n" \
             % (self.title,self.avid,self.bvid,self.owner.name,self.pages)
         for i in range(self.pages):
             string += "P%d.%s\n" % (i+1,self.video_list[i].subtitle)
@@ -166,6 +165,7 @@ class Videos:
                     vformat = data['format']
                     file_name = title_generator(self.title) + "_" + str(self.page) + "_" + vformat + ".flv"
                     Download_Mission(url=url,file_name=file_name,referer=self.referer)
+                    return file_name
                 else:
                     raise MannualError(3)
             else:
@@ -217,6 +217,7 @@ class Videos:
             raise MannualError(6)
         FFmpegMission(VideoName,AudioName,Outputname)
         del self.tmp_DashUrl
+        return Outputname
     def show(self):
         string = ''
         if self.AbleToDownload:
@@ -264,21 +265,18 @@ class UP:
         else:
             raise MannualError(3)
     def show(self):
-        print('========UP主信息=======')
-        print('ID:\t'+self.name)
-        print('UID:\t'+str(self.__mid))
-        print('等级:\tlv.'+str(self.__level))
-        print('签名:\t'+self.__sign)
-        print('粉丝:\t'+str(self.__follower))
+        string = "ID:\t%s\nUID:\t%d\n等级:\tlv.%d\n签名:\t%s\n粉丝数:\t%d\n" \
+            % (self.name, self.__mid, self.__level, self.__sign, self.__follower)
+        return string
 
 """交互部分"""
 title = "\
-██████╗ ██╗██╗     ██╗██████╗ ██╗██╗     ██╗    ██████╗  ██████╗ ██╗    ██╗██╗      ██████╗  █████╗ ██████╗ ███████╗██████╗ \n\
-██╔══██╗██║██║     ██║██╔══██╗██║██║     ██║    ██╔══██╗██╔═══██╗██║    ██║██║     ██╔═══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗\n\
-██████╔╝██║██║     ██║██████╔╝██║██║     ██║    ██║  ██║██║   ██║██║ █╗ ██║██║     ██║   ██║███████║██║  ██║█████╗  ██████╔╝\n\
-██╔══██╗██║██║     ██║██╔══██╗██║██║     ██║    ██║  ██║██║   ██║██║███╗██║██║     ██║   ██║██╔══██║██║  ██║██╔══╝  ██╔══██╗\n\
-██████╔╝██║███████╗██║██████╔╝██║███████╗██║    ██████╔╝╚██████╔╝╚███╔███╔╝███████╗╚██████╔╝██║  ██║██████╔╝███████╗██║  ██║\n\
-╚═════╝ ╚═╝╚══════╝╚═╝╚═════╝ ╚═╝╚══════╝╚═╝    ╚═════╝  ╚═════╝  ╚══╝╚══╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝"
+██████╗ ██╗██╗     ██╗██████╗ ██╗██╗     ██╗    ██████╗  ██████╗ ██╗    ██╗███╗   ██╗██╗      ██████╗  █████╗ ██████╗ ███████╗██████╗ \n\
+██╔══██╗██║██║     ██║██╔══██╗██║██║     ██║    ██╔══██╗██╔═══██╗██║    ██║████╗  ██║██║     ██╔═══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗\n\
+██████╔╝██║██║     ██║██████╔╝██║██║     ██║    ██║  ██║██║   ██║██║ █╗ ██║██╔██╗ ██║██║     ██║   ██║███████║██║  ██║█████╗  ██████╔╝\n\
+██╔══██╗██║██║     ██║██╔══██╗██║██║     ██║    ██║  ██║██║   ██║██║███╗██║██║╚██╗██║██║     ██║   ██║██╔══██║██║  ██║██╔══╝  ██╔══██╗\n\
+██████╔╝██║███████╗██║██████╔╝██║███████╗██║    ██████╔╝╚██████╔╝╚███╔███╔╝██║ ╚████║███████╗╚██████╔╝██║  ██║██████╔╝███████╗██║  ██║\n\
+╚═════╝ ╚═╝╚══════╝╚═╝╚═════╝ ╚═╝╚══════╝╚═╝    ╚═════╝  ╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝"
 ErrorMeassage = "按回车返回"
 aria2ErrorMessage = "Error:Aria2未能开启下载\n可能原因：aria2c.exe不存在\n"
 ffmpegErrorMessage = "Error:ffmpeg出错\n可能原因：ffmpeg.exe不存在\n"
@@ -288,6 +286,7 @@ NotAcQnMessage = "Error:不可用画质\n[BUG]\n"
 ParaMessage = "Error:参数不可用\n[BUG]\n"
 StateErrorMessage = "Error:状态机错误\n[BUG]\n"
 InputErrorMessgae = "Error:输入错误，请重新输入"
+ContinueMessage = "按回车继续"
 
 #主程序状态
 NORMAL = 0
@@ -299,6 +298,7 @@ FLV_DOWNLOADING = 5
 SELECT_FORMAT = 6
 AVC_DOWNLOADING = 7
 HEV_DOWNLOADING = 8
+UP_INFO = 9
 
 item_group = []
 STATE = NORMAL
@@ -345,10 +345,10 @@ class StateMachine:
         elif self.statetag == VideoInfo:
             print("选择的稿件：")
             print(item_group[self.SelectedIndex].show())
-            print("返回【X】 退出【Q】")
+            print("查看UP主信息【S】返回【X】 退出【Q】")
             print("选择要下载的P【1-%d】" % (item_group[self.SelectedIndex].pages))
         elif self.statetag == ADD_ITEM:
-            print("返回【X】 退出【Q】")
+            print("删除末尾【D】 清空【CL】 返回【X】 退出【Q】")
             print("输入一个av号或BV号")
         elif self.statetag == SELECT_QUALITY:
             print("可用画质")
@@ -367,9 +367,14 @@ class StateMachine:
             print("下载MP4封装AVC编码……")
         elif self.statetag == HEV_DOWNLOADING:
             print("下载MP4封装HEVC编码……")
+        elif self.statetag == UP_INFO:
+            print('========UP主信息=======')
+            print(item_group[self.SelectedIndex].owner.show())
+            print("返回【X】 退出【Q】")
         else:
             raise MannualError(8)
     def action(self):
+        global item_group
         if self.statetag == NORMAL:
             self.keyword = input()
         elif self.statetag == ADD_ITEM:
@@ -377,14 +382,19 @@ class StateMachine:
             #while not self.keyword.lower() == 'x':
             if av_pattern.match(self.keyword):
                 avid = re.search(r'[0-9]+',self.keyword)
-                item_group.append(bili_Video(avid=int(avid.group(0))))
-                print("已添加av%s" % avid.group(0))
+                item = bili_Video(avid=int(avid.group(0)))
+                item_group.append(item)
+                print("已添加av%s\n%s" % (avid.group(0),item.title))
             elif BV_pattern.match(self.keyword):
                 bvid = BV_pattern.match(self.keyword)
-                item_group.append(bili_Video(bvid=bvid.group(0)))
-                print("已添加%s" % bvid.group(0))
+                item = bili_Video(bvid=bvid.group(0))
+                item_group.append(item)
+                print("已添加%s\n%s" % (bvid.group(0),item.title))
             elif self.keyword.lower() == 'd':
                 item_group.pop(len(item_group)-1)
+            elif self.keyword.lower() == 'cl':
+                del item_group
+                item_group = []
             elif self.keyword.lower() == 'x' or self.keyword.lower() == 'q':
                 pass
             else:
@@ -396,13 +406,24 @@ class StateMachine:
         elif self.statetag == SELECT_CONTAINER:
             self.keyword = input()
         elif self.statetag == FLV_DOWNLOADING:
-            item_group[self.SelectedIndex].video_list[self.SelectedPIndex].Flv_downloader(self.SelectedQuality)
+            name = item_group[self.SelectedIndex].video_list[self.SelectedPIndex].Flv_downloader(self.SelectedQuality)
+            os.system('cls')
+            print("FLV视频已下载到%s" % name)
+            input(ContinueMessage)
         elif self.statetag == SELECT_FORMAT:
             self.keyword = input()
         elif self.statetag == AVC_DOWNLOADING:
-            item_group[self.SelectedIndex].video_list[self.SelectedPIndex].Dash_downloader()
+            name = item_group[self.SelectedIndex].video_list[self.SelectedPIndex].Dash_downloader()
+            os.system('cls')
+            print("MP4（AVC）视频已下载到%s" % name)
+            input(ContinueMessage)
         elif self.statetag == HEV_DOWNLOADING:
-            item_group[self.SelectedIndex].video_list[self.SelectedPIndex].Dash_downloader(12)
+            name = item_group[self.SelectedIndex].video_list[self.SelectedPIndex].Dash_downloader(12)
+            os.system('cls')
+            print("MP4（HEV）视频已下载到%s" % name)
+            input(ContinueMessage)
+        elif self.statetag == UP_INFO:
+            self.keyword = input()
         else:
             raise MannualError(7)
     def switch(self):
@@ -426,6 +447,8 @@ class StateMachine:
         elif self.statetag == VideoInfo:
             if self.keyword.lower() == 'x':
                 self.statetag = NORMAL
+            elif self.keyword.lower() == 's':
+                self.statetag = UP_INFO
             elif isNumber(self.keyword):
                 self.SelectedPIndex = int(self.keyword)-1
                 item_group[self.SelectedIndex].video_list[self.SelectedPIndex].load()
@@ -470,6 +493,11 @@ class StateMachine:
         elif self.statetag == AVC_DOWNLOADING or self.statetag == HEV_DOWNLOADING or \
             self.statetag == FLV_DOWNLOADING:
             self.statetag = VideoInfo
+        elif self.statetag == UP_INFO:
+            if self.keyword.lower() == 'x':
+                self.statetag = VideoInfo
+            else:
+                raise MannualError(8)
         else:
             raise MannualError(7)            
 
