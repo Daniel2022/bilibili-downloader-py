@@ -191,7 +191,10 @@ class Videos:
                 },headers=headers).json()
                 if response['code'] == 0:
                     data = response['data']
-                    AUrl = data['dash']['audio'][0]['baseUrl']
+                    try:
+                        AUrl = data['dash']['audio'][0]['baseUrl']
+                    except TypeError:
+                        AUrl = None
                     self.tmp_DashUrl = DashUrlStruct(AUrl,qn)
                     counter = 0
                     for v in data['dash']['video']:
@@ -210,8 +213,9 @@ class Videos:
             raise MannualError(4)
     def Dash_downloader(self,codecid=7):
         filetitle = title_generator(self.title) + "_" + str(self.page)
-        AudioName = filetitle + "_" + "Audio.aac"
-        Download_Mission(self.tmp_DashUrl.AUrl,self.referer,AudioName)
+        if self.tmp_DashUrl.AUrl:
+            AudioName = filetitle + "_" + "Audio.aac"
+            Download_Mission(self.tmp_DashUrl.AUrl,self.referer,AudioName)
         if codecid == 7:
             VideoName = filetitle + "_Video_AVC.mp4"
             Download_Mission(self.tmp_DashUrl.AVC_Url,self.referer,VideoName)
@@ -222,9 +226,13 @@ class Videos:
             Outputname = filetitle + "_HEV.mp4"
         else:
             raise MannualError(6)
-        FFmpegMission(VideoName,AudioName,Outputname)
-        del self.tmp_DashUrl
-        return Outputname
+        if self.tmp_DashUrl.AUrl:
+            FFmpegMission(VideoName,AudioName,Outputname)
+            del self.tmp_DashUrl
+            return Outputname
+        else:
+            del self.tmp_DashUrl
+            return VideoName
     def showqn(self):
         string = ''
         if self.AbleToDownload:
