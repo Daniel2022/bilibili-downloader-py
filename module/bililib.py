@@ -20,6 +20,18 @@ headers = {
     "upgrade-insecure-requests": '1'
 }
 
+quality_dict = {"desp":[ #这个不知道写来干吗
+    "超清 4K",
+    "高清 1080P60",
+    "高清 720P60",
+    "高清 1080P+",
+    "高清 1080P",
+    "高清 720P",
+    "清晰 480P",
+    "流畅 360P"],
+    "value":[120,116,74,112,80,64,32,16]
+}
+
 class MannualError(RuntimeError):
     def __init__(self,M):
         self.ErrorCode = M   
@@ -117,6 +129,10 @@ class bili_Video:
         for i in range(self.pages):
             string += "P%d.%s\n" % (i+1,self.video_list[i].subtitle)
         return string
+    def autodownload(self,qn=80):
+        for i in range(len(self.video_list)):
+            self.video_list[i].load()
+            self.video_list[i].Flv_downloader(qn=qn,auto=True)
 
 class Videos:
     def __init__(self,avid=None,bvid=None,cid=None,page=1,title=None,subtitle=None):
@@ -141,9 +157,9 @@ class Videos:
             self.AbleToDownload = True
         else:
             raise MannualError(3)
-    def Flv_downloader(self,qn=80):
+    def Flv_downloader(self,qn=80,auto=False):
         if self.AbleToDownload:
-            if qn in self.accept_quality:
+            if qn in self.accept_quality or auto:
                 response = requests.get(GET_VIDEO_DOWNLOAD_URL,{
                     'bvid': self.bvid,
                     'cid': self.cid,
@@ -209,7 +225,7 @@ class Videos:
         FFmpegMission(VideoName,AudioName,Outputname)
         del self.tmp_DashUrl
         return Outputname
-    def show(self):
+    def showqn(self):
         string = ''
         if self.AbleToDownload:
             #string += "可用画质\n"

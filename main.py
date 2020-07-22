@@ -1,4 +1,4 @@
-from module.bililib import bili_Video, set_header, MannualError
+from module.bililib import bili_Video, set_header, MannualError, quality_dict
 import re, pickle, os
 """交互部分"""
 title = "\
@@ -32,6 +32,7 @@ SELECT_FORMAT = 6
 AVC_DOWNLOADING = 7
 HEV_DOWNLOADING = 8
 UP_INFO = 9
+AutoDownload = 10
 
 item_group = []
 STATE = NORMAL
@@ -63,6 +64,7 @@ class StateMachine:
         self.SelectedPIndex = 0
         self.keyword = None
         self.SelectedQuality = None
+        self.auto = False
     def SetState(self,state):
         self.statetag = state
     def display(self):
@@ -86,16 +88,25 @@ class StateMachine:
             print("选择的稿件：")
             print(item_group[self.SelectedIndex].show())
             print("查看UP主信息【S】返回【X】 退出【Q】")
-            print("选择要下载的P【1-%d】" % (item_group[self.SelectedIndex].pages))
+            print("选择要下载的P【1-%d】下载全部【A】" % (item_group[self.SelectedIndex].pages))
+        elif self.statetag == AutoDownload:
+            print("下载全部分页：%s" % item_group[self.SelectedIndex].title)
         elif self.statetag == ADD_ITEM:
             print("删除末尾【D】 清空【CL】 返回【X】 退出【Q】")
             print("输入一个av号或BV号")
         elif self.statetag == SELECT_QUALITY:
-            print("可用画质")
-            print(item_group[self.SelectedIndex].video_list[self.SelectedPIndex].show())
-            print("返回【X】 退出【Q】")
-            print("选择画质【1-%d】" \
-                % (len(item_group[self.SelectedIndex].video_list[self.SelectedPIndex].accept_quality)))
+            if self.auto:
+                print("可用画质（下载会自动择优）")
+                for i in range(len(quality_dict['desp'])):
+                    print("%d.%s" % (i+1,quality_dict['desp'][i]))
+                print("")
+                print("选择批量的画质【1-%d】" % len(quality_dict['value']))
+            else:
+                print("可用画质")
+                print(item_group[self.SelectedIndex].video_list[self.SelectedPIndex].showqn())
+                print("返回【X】 退出【Q】")
+                print("选择画质【1-%d】" \
+                    % (len(item_group[self.SelectedIndex].video_list[self.SelectedPIndex].accept_quality)))
         elif self.statetag == SELECT_CONTAINER:
             print("退出【Q】")
             print("选择封装【1】FLV【2】MP4")
@@ -141,6 +152,12 @@ class StateMachine:
                 raise MannualError(8)
         elif self.statetag == VideoInfo:
             self.keyword = input()
+        elif self.statetag == AutoDownload:
+            item_group[self.SelectedIndex].autodownload(self.SelectedQuality)
+            self.auto = False
+            os.system('cls')
+            print("全部分页已下载完成")
+            input(ContinueMessage)
         elif self.statetag == SELECT_QUALITY:
             self.keyword = input()
         elif self.statetag == SELECT_CONTAINER:
@@ -189,6 +206,9 @@ class StateMachine:
                 self.statetag = NORMAL
             elif self.keyword.lower() == 's':
                 self.statetag = UP_INFO
+            elif self.keyword.lower() == 'a':
+                self.statetag = SELECT_QUALITY
+                self.auto = True
             elif isNumber(self.keyword):
                 self.SelectedPIndex = int(self.keyword)-1
                 item_group[self.SelectedIndex].video_list[self.SelectedPIndex].load()
@@ -199,8 +219,12 @@ class StateMachine:
             if self.keyword.lower() == 'x':
                 self.statetag = VideoInfo
             elif isNumber(self.keyword):
-                self.SelectedQuality = item_group[self.SelectedIndex].video_list[self.SelectedPIndex].accept_quality[int(self.keyword)-1]
-                self.statetag = SELECT_CONTAINER
+                if self.auto:
+                    self.SelectedQuality = quality_dict['value'][int(self.keyword)-1]
+                    self.statetag = AutoDownload
+                else:
+                    self.SelectedQuality = item_group[self.SelectedIndex].video_list[self.SelectedPIndex].accept_quality[int(self.keyword)-1]
+                    self.statetag = SELECT_CONTAINER
             else:
                 raise MannualError(8)
         elif self.statetag == SELECT_CONTAINER:
@@ -231,7 +255,7 @@ class StateMachine:
             else:
                 raise MannualError(8)
         elif self.statetag == AVC_DOWNLOADING or self.statetag == HEV_DOWNLOADING or \
-            self.statetag == FLV_DOWNLOADING:
+            self.statetag == FLV_DOWNLOADING or self.statetag == AutoDownload:
             self.statetag = VideoInfo
         elif self.statetag == UP_INFO:
             if self.keyword.lower() == 'x':
