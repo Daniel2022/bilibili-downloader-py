@@ -131,7 +131,8 @@ class bili_Video:
         return string
     def autodownload(self,qn=80):
         for i in range(len(self.video_list)):
-            self.video_list[i].load()
+            if not self.video_list[i].AbleToDownload:
+                self.video_list[i].load()
             self.video_list[i].Flv_downloader(qn=qn,auto=True)
 
 class Videos:
@@ -142,6 +143,7 @@ class Videos:
         self.page = page
         self.title = title
         self.subtitle = subtitle
+        self.AbleToDownload = False
         self.referer = 'https://www.bilibili.com/video/%s?page=%d' % (self.bvid, self.page)
     def load(self):
         response = requests.get(GET_VIDEO_DOWNLOAD_URL,{

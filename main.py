@@ -43,10 +43,13 @@ BV_pattern = re.compile(r'BV[0-9A-Za-z]+')
 
 firststart = True
 
-def exitAction():
+def save():
     savedata = open(savefile,'wb')
     pickle.dump(item_group,savedata)
     savedata.close()
+
+def exitAction():
+    save()
     os.system('cls')
     print("脚本已退出，记录已保存至" + savefile)
     os._exit(0)
@@ -149,6 +152,7 @@ class StateMachine:
                         item = bili_Video(bvid=bvid)
                         item_group.append(item)
                         print("已添加%s\n%s" % (bvid,item.title))
+                save()
             elif self.keyword.lower() == 'd':
                 item_group.pop(len(item_group)-1)
             elif self.keyword.lower() == 'cl':
@@ -379,3 +383,5 @@ if __name__ == "__main__":
         except IndexError:
             print("Error:索引错误")
             input(ErrorMeassage)
+        except KeyboardInterrupt:
+            exitAction()
