@@ -136,6 +136,7 @@ dmypy.json
 *.exe
 *.pysav
 savedata
+downloads/
 
 #cookie
 *.sqlite

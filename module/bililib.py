@@ -1,24 +1,13 @@
 import requests
-import subprocess
-import http.cookiejar
+if __name__ == "__main__":
+    from myopertion import headers, title_generator, Download_Mission, FFmpegMission
+else:
+    from .myopertion import headers, title_generator, Download_Mission, FFmpegMission
 
 GET_VIDEO_INFO_URL = "https://api.bilibili.com/x/web-interface/view"
 GET_VIDEO_DOWNLOAD_URL = "https://api.bilibili.com/x/player/playurl"
 GET_INFO_URL = "https://api.bilibili.com/x/space/acc/info"
 GET_FAN_URL = "https://api.bilibili.com/x/relation/stat"
-
-headers = {
-    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-    "accept-encoding": "gzip, deflate, br",
-    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-    "cookie": "",
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.30 Safari/537.36 Edg/84.0.522.11",
-    "sec-fetch-dest": "document",
-    "sec-fetch-mode": "navigate",
-    "sec-fetch-site": "none",
-    "sec-fetch-user": "?1",
-    "upgrade-insecure-requests": '1'
-}
 
 quality_dict = {"desp":[ #这个不知道写来干吗
     "超清 4K",
@@ -32,68 +21,32 @@ quality_dict = {"desp":[ #这个不知道写来干吗
     "value":[120,116,74,112,80,64,32,16]
 }
 
+quality_dict_file = { #这个不知道写来干吗
+    120:"4K",
+    116:"1080p60",
+    74:"720p60",
+    112:"1080p+",
+    80:"1080p",
+    64:"720p",
+    32:"480p",
+    16:"360p"
+}
+
 class MannualError(RuntimeError):
+    ContinueMessage = "按回车继续"
     def __init__(self,M):
-        self.ErrorCode = M   
-
-def cookie_loader(cookiefile="cookies.sqlite"):
-    #来自soimort/you-get sqlite格式火狐cookies处理
-    import sqlite3, shutil, tempfile, os
-    temp_dir = tempfile.gettempdir()
-    temp_cookiefile = os.path.join(temp_dir, 'temp_cookiefile.sqlite')
-    shutil.copy2(cookiefile, temp_cookiefile)
-    cookies = http.cookiejar.MozillaCookieJar()
-    con = sqlite3.connect(temp_cookiefile)
-    cur = con.cursor()
-    cur.execute("""SELECT host, path, isSecure, expiry, name, value
-    FROM moz_cookies""")
-    for item in cur.fetchall():
-        c = http.cookiejar.Cookie(
-            0, item[4], item[5], None, False, item[0],
-            item[0].startswith('.'), item[0].startswith('.'),
-            item[1], False, item[2], item[3], item[3] == '', None,
-            None, {},
-        )
-        cookies.set_cookie(c)
-    #引自mo-han/mo-han-toolbox
-    cookie_dict = requests.utils.dict_from_cookiejar(cookies) 
-    cookies_l = ['{}={}'.format(k, v) for k, v in cookie_dict.items()]
-    cookie = '; '.join(cookies_l)
-    return cookie
-
-def set_header():
-    import os
-    if os.path.exists("cookies.sqlite"):
-        headers['cookie'] = cookie_loader()
-        print('已加载cookies')
-    else:
-        print('不存在cookies.sqlite')
-
-def Download_Mission(url,referer,file_name=None):
-    shell = "./aria2c.exe --continue=true \"" + url + "\" --referer=" + referer
-    if file_name:
-        shell += " -o \"" + file_name + "\""
-    sbp = subprocess.Popen([r'powershell',shell])
-    sbp.wait()
-    if sbp.returncode:
-        raise MannualError(1)
-
-def title_generator(title:str):
-    return title.replace("\\"," ").replace('/'," ").replace(":"," ")\
-        .replace("*"," ").replace("?"," ").replace("\""," ").replace("<"," ")\
-            .replace(">"," ").replace("|"," ").replace("”"," ").replace("“"," ")
-
-def FFmpegMission(VideoName,AudioName,Outputname):
-    shell = "./ffmpeg.exe -i \"" + VideoName + "\" -i \"" + AudioName + \
-        "\" -c:v copy -c:a copy -strict experimental " + "\"" + Outputname + "\" -y"
-    #print(shell)
-    sbp = subprocess.Popen([r'powershell',shell])
-    sbp.wait()
-    if sbp.returncode:
-        raise MannualError(2)
-    else:
-        subprocess.Popen("del \"" + VideoName + "\"", shell=True).wait()
-        subprocess.Popen("del \"" + AudioName + "\"", shell=True).wait()
+        self.ErrorCode = M
+    def reminder(self):
+        if self.ErrorCode == 3:
+            return "Error:api获取错误\n可能原因：\n1.视频不可用\n2.使用非大会员帐号访问大会员专属视频\n"
+        elif self.ErrorCode == 4:
+            return "Error:Video实例未load\n[BUG]\n"
+        elif self.ErrorCode == 5:
+            return "Error:不可用画质\n[BUG]\n"
+        elif self.ErrorCode == 6:
+            return "Error:参数不可用\n[BUG]\n"
+        else:
+            return "Not Known"
 
 class bili_Video:
     def __init__(self,bvid=None,avid=None):
@@ -171,8 +124,9 @@ class Videos:
                 if response['code'] == 0:
                     data = response['data']
                     url = data['durl'][0]['url']
-                    vformat = data['format']
-                    file_name = title_generator(self.title) + "_" + str(self.page) + "_" + vformat + ".flv"
+                    quality = data['quality']
+                    #file_name = title_generator(self.title) + "_" + str(self.page) + "_" + vformat + ".flv"
+                    file_name = "%s/P%d_%s_%s.flv" % (title_generator(self.title),self.page,title_generator(self.subtitle),quality_dict_file[quality])
                     Download_Mission(url=url,file_name=file_name,referer=self.referer)
                     return file_name
                 else:
@@ -214,18 +168,19 @@ class Videos:
         else:
             raise MannualError(4)
     def Dash_downloader(self,codecid=7):
-        filetitle = title_generator(self.title) + "_" + str(self.page)
+        #filetitle = title_generator(self.title) + "_" + str(self.page)
+        filetitle = "%s/P%d_%s" % (title_generator(self.title),self.page,title_generator(self.subtitle))
         if self.tmp_DashUrl.AUrl:
-            AudioName = filetitle + "_" + "Audio.aac"
+            AudioName = filetitle + "_" + "A.aac"
             Download_Mission(self.tmp_DashUrl.AUrl,self.referer,AudioName)
         if codecid == 7:
-            VideoName = filetitle + "_Video_AVC.mp4"
+            VideoName = filetitle + "_%s_AVC_V.mp4" % quality_dict_file[self.tmp_DashUrl.qn]
             Download_Mission(self.tmp_DashUrl.AVC_Url,self.referer,VideoName)
-            Outputname = filetitle + "_AVC.mp4"
+            Outputname = filetitle + "_%s_AVC.mp4" % quality_dict_file[self.tmp_DashUrl.qn]
         elif codecid == 12 and self.tmp_DashUrl.HEVC:
-            VideoName = filetitle + "_Video_HEV.mp4"
+            VideoName = filetitle + "_%s_HEVC_V.mp4" % quality_dict_file[self.tmp_DashUrl.qn]
             Download_Mission(self.tmp_DashUrl.HEV_Url,self.referer,VideoName)
-            Outputname = filetitle + "_HEV.mp4"
+            Outputname = filetitle + "_%s_HEVC.mp4" % quality_dict_file[self.tmp_DashUrl.qn]
         else:
             raise MannualError(6)
         if self.tmp_DashUrl.AUrl:
