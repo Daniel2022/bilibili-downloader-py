@@ -194,12 +194,12 @@ class StateMachine:
             self.keyword = input().strip()
         elif self.statetag == AVC_DOWNLOADING:
             name = item_group[self.SelectedIndex].video_list[self.SelectedPIndex].Dash_downloader()
-            #os.system('cls')
+            os.system('cls')
             print("MP4（AVC）视频已下载到%s" % name)
             input(ContinueMessage)
         elif self.statetag == HEV_DOWNLOADING:
             name = item_group[self.SelectedIndex].video_list[self.SelectedPIndex].Dash_downloader(12)
-            #os.system('cls')
+            os.system('cls')
             print("MP4（HEV）视频已下载到%s" % name)
             input(ContinueMessage)
         elif self.statetag == UP_INFO:
@@ -297,6 +297,7 @@ class StateMachine:
             raise StateError(7)            
 
 if __name__ == "__main__":
+    os.system('cls')
     print(title)
     #初始生成savedata
     if not os.path.isfile(savefile):
@@ -319,7 +320,7 @@ if __name__ == "__main__":
             State.action()
             State.switch()
         except (MannualError, ProcessError, StateError) as e :
-            #os.system('cls')
+            os.system('cls')
             print(e.reminder())
             input(ErrorMeassage)
             if e.ErrorCode == 8:
