@@ -9,6 +9,7 @@ GET_VIDEO_DOWNLOAD_URL = "https://api.bilibili.com/x/player/playurl"
 GET_INFO_URL = "https://api.bilibili.com/x/space/acc/info"
 GET_FAN_URL = "https://api.bilibili.com/x/relation/stat"
 GET_BANGUMI_URL = "https://api.bilibili.com/pgc/web/season/section"
+MEADIA_ID_URL = "https://api.bilibili.com/pgc/review/user"
 
 quality_dict = {"desp":[ #这个不知道写来干吗
     "超清 4K",
@@ -93,6 +94,57 @@ class bili_Video:
                 for j in range(9):
                     time.sleep(1)
 
+class Bangumi(bili_Video):
+    def __init__(self, media_id=None, ep_id=None, season_id=None):
+        import re
+        html_pattern = re.compile(r'"name": "(.+)",\s*"url": "https://www.bilibili.com/bangumi/play/ss([0-9]+)/"')
+        #ssExist = False
+        self.ssid = None
+        if season_id:
+            resp_text = requests.get(url="https://www.bilibili.com/bangumi/play/ss%d" % season_id).text
+            self.ssid = season_id
+            self.title = html_pattern.search(resp_text).group(1)
+        elif media_id:
+            response = requests.get(MEADIA_ID_URL,{
+                'media_id': media_id
+            }).json()
+            if response['code'] == 0:
+                self.ssid = response['result']['media']['season_id']
+                self.title = response['result']['media']['title']
+            else:
+                raise MannualError(3)
+        elif ep_id:
+            resp_text = requests.get(url="https://www.bilibili.com/bangumi/play/ep%d" % ep_id).text
+            self.ssid = int(html_pattern.search(resp_text).group(2))
+            self.title = html_pattern.search(resp_text).group(1)
+        else:
+            raise MannualError(3)
+        bangumi_resp = requests.get(GET_BANGUMI_URL,{
+            'season_id': self.ssid
+        }).json()
+        #print(bangumi_resp)
+        if bangumi_resp['code'] == 0:
+            self.video_list = []
+            result = bangumi_resp['result']
+            count = 0
+            for p in result['main_section']['episodes']:
+                self.video_list.append(Videos(avid=p['aid'],cid=p['cid'],page=count+1,title=self.title,subtitle=p['long_title']))
+                count += 1
+            self.pages = count
+            info_resp = requests.get(GET_VIDEO_INFO_URL,{
+                'aid': result['main_section']['episodes'][0]['aid']
+            }).json()
+            if info_resp['code'] == 0:
+                self.owner = UP(info_resp['data']['owner']['mid'])
+        else:
+            raise MannualError(3)
+    def show(self):
+        string = "%s\nss号：%s\nUP主：%s\nP数：%d\n\n" \
+            % (self.title,self.ssid,self.owner.name,self.pages)
+        for i in range(self.pages):
+            string += "P%d.%s\n" % (i+1,self.video_list[i].subtitle)
+        return string
+
 class Videos:
     def __init__(self,avid=None,bvid=None,cid=None,page=1,title=None,subtitle=None):
         self.avid = avid
@@ -102,10 +154,14 @@ class Videos:
         self.title = title
         self.subtitle = subtitle
         self.AbleToDownload = False
-        self.referer = 'https://www.bilibili.com/video/%s?page=%d' % (self.bvid, self.page)
+        if bvid:
+            self.referer = 'https://www.bilibili.com/video/%s?page=%d' % (self.bvid, self.page)
+        else:
+            self.referer = 'https://www.bilibili.com/video/av%s?page=%d' % (self.avid, self.page)
     def load(self):
         response = requests.get(GET_VIDEO_DOWNLOAD_URL,{
             'bvid': self.bvid,
+            'avid': self.avid,
             'cid': self.cid,
             'fourk': 1
         },headers=headers).json()
@@ -126,6 +182,7 @@ class Videos:
                     return None
                 response = requests.get(GET_VIDEO_DOWNLOAD_URL,{
                     'bvid': self.bvid,
+                    'avid': self.avid,
                     'cid': self.cid,
                     'fourk': 1,
                     'qn': qn
@@ -149,6 +206,7 @@ class Videos:
             if qn in self.accept_quality:
                 response = requests.get(GET_VIDEO_DOWNLOAD_URL,{
                     'bvid': self.bvid,
+                    'avid': self.avid,
                     'cid': self.cid,
                     'fourk': 1,
                     'qn': qn,
@@ -249,3 +307,6 @@ class UP:
         string = "ID:\t%s\nUID:\t%d\n等级:\tlv.%d\n签名:\t%s\n粉丝数:\t%d\n" \
             % (self.name, self.__mid, self.__level, self.__sign, self.__follower)
         return string
+
+if __name__ == "__main__":
+    pass

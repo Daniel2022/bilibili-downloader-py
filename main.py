@@ -1,4 +1,4 @@
-from module.bililib import bili_Video, MannualError, quality_dict
+from module.bililib import bili_Video, Bangumi, MannualError, quality_dict
 from module.myopertion import set_header, checkpath, ProcessError
 import re, pickle, os
 """交互部分"""
@@ -31,8 +31,9 @@ AllDownload = 11
 item_group = []
 STATE = NORMAL
 
-av_pattern = re.compile(r'av[0-9]+',flags=re.I)
+av_pattern = re.compile(r'av([0-9]+)',flags=re.I)
 BV_pattern = re.compile(r'BV[0-9A-Za-z]+')
+ep_pattern = re.compile(r'(ep|md|ss)([0-9]+)')
 
 firststart = True
 
@@ -149,13 +150,14 @@ class StateMachine:
         elif self.statetag == ADD_ITEM:
             self.keyword = input().strip()
             #while not self.keyword.lower() == 'x':
-            if av_pattern.match(self.keyword) or BV_pattern.match(self.keyword):
+            if av_pattern.match(self.keyword) or BV_pattern.match(self.keyword) or ep_pattern.match(self.keyword):
                 code_list = self.keyword.split()
                 for code in code_list:
                     av_match = av_pattern.match(code)
                     BV_match = BV_pattern.match(code)
+                    ep_match = ep_pattern.match(code)
                     if av_match:
-                        avid = re.search(r'[0-9]+',code).group(0)
+                        avid = av_match.group(1)
                         item = bili_Video(avid=int(avid))
                         item_group.append(item)
                         print("已添加av%s\n%s" % (avid,item.title))
@@ -164,6 +166,15 @@ class StateMachine:
                         item = bili_Video(bvid=bvid)
                         item_group.append(item)
                         print("已添加%s\n%s" % (bvid,item.title))
+                    elif ep_match:
+                        if ep_match.group(1) == 'ep':
+                            item = Bangumi(ep_id=int(ep_match.group(2)))
+                        elif ep_match.group(1) == 'md':
+                            item = Bangumi(media_id=int(ep_match.group(2)))
+                        elif ep_match.group(1) == 'ss':
+                            item = Bangumi(season_id=int(ep_match.group(2)))
+                        item_group.append(item)
+                        print("已添加剧集ss%d\n%s" % (item.ssid,item.title))
                 save()
             elif self.keyword.lower() == 'd':
                 item_group.pop(len(item_group)-1)
