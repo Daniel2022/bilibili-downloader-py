@@ -74,6 +74,14 @@ class StateMachine:
         self.SelectedQuality = None
         self.auto = False
         self.allauto = False
+    def reset(self):
+        self.statetag = NORMAL
+        self.SelectedIndex = 0
+        self.SelectedPIndex = 0
+        self.keyword = None
+        self.SelectedQuality = None
+        self.auto = False
+        self.allauto = False
     def SetState(self,state):
         self.statetag = state
     def display(self):
@@ -243,7 +251,14 @@ class StateMachine:
                 raise StateError(8)
         elif self.statetag == SELECT_QUALITY:
             if self.keyword.lower() == 'x':
-                self.statetag = VideoInfo
+                if self.auto:
+                    self.statetag = VideoInfo
+                    self.auto = False
+                elif self.allauto:
+                    self.statetag = NORMAL
+                    self.allauto = False
+                else:
+                    self.statetag = VideoInfo
             elif isNumber(self.keyword):
                 if self.auto or self.allauto:
                     self.SelectedQuality = quality_dict['value'][int(self.keyword)-1]
@@ -286,6 +301,7 @@ class StateMachine:
         elif self.statetag == AVC_DOWNLOADING or self.statetag == HEV_DOWNLOADING or \
             self.statetag == FLV_DOWNLOADING or self.statetag == AutoDownload:
             self.statetag = VideoInfo
+            self.auto = False
         elif self.statetag == UP_INFO:
             if self.keyword.lower() == 'x':
                 self.statetag = VideoInfo
@@ -293,8 +309,9 @@ class StateMachine:
                 raise StateError(8)
         elif self.statetag == AllDownload:
             self.statetag = NORMAL
+            self.allauto = False
         else:
-            raise StateError(7)            
+            raise StateError(7)           
 
 if __name__ == "__main__":
     os.system('cls')
@@ -326,7 +343,7 @@ if __name__ == "__main__":
             if e.ErrorCode == 8:
                 State.keyword = None
             else:
-                State.statetag = NORMAL
+                State.reset()
         except IndexError:
             print("Error:索引错误")
             input(ErrorMeassage)

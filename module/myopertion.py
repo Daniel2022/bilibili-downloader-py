@@ -1,4 +1,4 @@
-import subprocess
+import subprocess, os
 
 headers = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -29,7 +29,7 @@ class ProcessError(RuntimeError):
 
 def cookie_loader(cookiefile="cookies.sqlite"):
     #来自soimort/you-get sqlite格式火狐cookies处理
-    import sqlite3, shutil, tempfile, os, requests, http.cookiejar
+    import sqlite3, shutil, tempfile, requests, http.cookiejar
     temp_dir = tempfile.gettempdir()
     temp_cookiefile = os.path.join(temp_dir, 'temp_cookiefile.sqlite')
     shutil.copy2(cookiefile, temp_cookiefile)
@@ -53,7 +53,6 @@ def cookie_loader(cookiefile="cookies.sqlite"):
     return [cookie,cookie_dict['bili_jct']]
 
 def set_header():
-    import os
     if os.path.exists("cookies.sqlite"):
         headers['cookie'] = cookie_loader()[0]
         print('已加载cookies')
@@ -62,7 +61,6 @@ def set_header():
 
 #检查系统
 def checkpath():
-    import os
     global aria2shell, ffmpegshell
     Aria2_Exist = False
     FFmpeg_Exist = False
@@ -95,15 +93,16 @@ def checkpath():
         print("不存在ffmpeg\n无法合成MP4")
 
 def Download_Mission(url,referer,file_name=None):
-    #shell = "./aria2c.exe --continue=true \"" + url + "\" --referer=" + referer
-    shell = "%s --continue=true \"%s\" --referer=%s --dir=./downloads" % (aria2shell, url, referer)
-    if file_name:
-        #shell += " -o \"" + file_name + "\""
-        shell += " -o \"%s\"" % file_name
-    sbp = subprocess.Popen([r'powershell',shell])
-    sbp.wait()
-    if sbp.returncode:
-        raise ProcessError(1)
+    if not os.path.isfile("downloads/"+file_name) or os.path.isfile("downloads/"+file_name+".aria2"):
+        #shell = "./aria2c.exe --continue=true \"" + url + "\" --referer=" + referer
+        shell = "%s -s 1 --continue=true \"%s\" --referer=%s --dir=./downloads" % (aria2shell, url, referer)
+        if file_name:
+            #shell += " -o \"" + file_name + "\""
+            shell += " -o \"%s\"" % file_name
+        sbp = subprocess.Popen([r'powershell',shell])
+        sbp.wait()
+        if sbp.returncode:
+            raise ProcessError(1)
 
 def FFmpegMission(VideoName,AudioName,Outputname):
     #shell = "./ffmpeg.exe -i \"" + VideoName + "\" -i \"" + AudioName + \
@@ -124,3 +123,18 @@ def title_generator(title:str):
     return title.replace("\\"," ").replace('/'," ").replace(":"," ")\
         .replace("*"," ").replace("?"," ").replace("\""," ").replace("<"," ")\
             .replace(">"," ").replace("|"," ").replace("”"," ").replace("“"," ")
+
+def file_exist(dir,patch):
+    import re
+    if os.path.isdir(dir):
+        filelist = os.listdir(dir)
+        for name in filelist:
+            if re.match(patch,name):
+                if name + ".aria2" in filelist:
+                    return None
+                return name
+            else:
+                continue
+            return None
+    else:
+        return None

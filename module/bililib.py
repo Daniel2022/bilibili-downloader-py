@@ -1,13 +1,14 @@
-import requests
+import requests, time
 if __name__ == "__main__":
-    from myopertion import headers, title_generator, Download_Mission, FFmpegMission
+    from myopertion import headers, title_generator, Download_Mission, FFmpegMission, file_exist
 else:
-    from .myopertion import headers, title_generator, Download_Mission, FFmpegMission
+    from .myopertion import headers, title_generator, Download_Mission, FFmpegMission, file_exist
 
 GET_VIDEO_INFO_URL = "https://api.bilibili.com/x/web-interface/view"
 GET_VIDEO_DOWNLOAD_URL = "https://api.bilibili.com/x/player/playurl"
 GET_INFO_URL = "https://api.bilibili.com/x/space/acc/info"
 GET_FAN_URL = "https://api.bilibili.com/x/relation/stat"
+GET_BANGUMI_URL = "https://api.bilibili.com/pgc/web/season/section"
 
 quality_dict = {"desp":[ #这个不知道写来干吗
     "超清 4K",
@@ -86,7 +87,11 @@ class bili_Video:
         for i in range(len(self.video_list)):
             if not self.video_list[i].AbleToDownload:
                 self.video_list[i].load()
-            self.video_list[i].Flv_downloader(qn=qn,auto=True)
+            tmp = self.video_list[i].Flv_downloader(qn=qn,auto=True)
+            if tmp:
+                print("等待……10s")
+                for j in range(9):
+                    time.sleep(1)
 
 class Videos:
     def __init__(self,avid=None,bvid=None,cid=None,page=1,title=None,subtitle=None):
@@ -114,7 +119,11 @@ class Videos:
             raise MannualError(3)
     def Flv_downloader(self,qn=80,auto=False):
         if self.AbleToDownload:
+            dir_title = title_generator(self.title)
             if qn in self.accept_quality or auto:
+                find_exist = file_exist("downloads/%s" % dir_title, 'P%d_.*\\.flv' % (self.page))
+                if find_exist and auto:
+                    return None
                 response = requests.get(GET_VIDEO_DOWNLOAD_URL,{
                     'bvid': self.bvid,
                     'cid': self.cid,
@@ -126,7 +135,7 @@ class Videos:
                     url = data['durl'][0]['url']
                     quality = data['quality']
                     #file_name = title_generator(self.title) + "_" + str(self.page) + "_" + vformat + ".flv"
-                    file_name = "%s/P%d_%s_%s.flv" % (title_generator(self.title),self.page,title_generator(self.subtitle),quality_dict_file[quality])
+                    file_name = "%s/P%d_%s_%s.flv" % (dir_title,self.page,title_generator(self.subtitle),quality_dict_file[quality])
                     Download_Mission(url=url,file_name=file_name,referer=self.referer)
                     return file_name
                 else:
