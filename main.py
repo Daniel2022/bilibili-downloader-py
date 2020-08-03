@@ -113,6 +113,7 @@ class StateMachine:
         elif self.statetag == ADD_ITEM:
             print("删除末尾【D】 清空【CL】 返回【X】 退出【Q】")
             print("输入1个或多个av号或BV号（空格分隔）")
+            print("添加剧集请输入ep_id或media_id或season_id")
         elif self.statetag == SELECT_QUALITY:
             if self.auto or self.allauto:
                 print("可用画质（下载会自动择优）")

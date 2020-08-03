@@ -139,7 +139,7 @@ class Bangumi(bili_Video):
         else:
             raise MannualError(3)
     def show(self):
-        string = "%s\nss号：%s\nUP主：%s\nP数：%d\n\n" \
+        string = "【剧集】%s\nss号：%s\nUP主：%s\n集数：%d\n\n" \
             % (self.title,self.ssid,self.owner.name,self.pages)
         for i in range(self.pages):
             string += "P%d.%s\n" % (i+1,self.video_list[i].subtitle)
