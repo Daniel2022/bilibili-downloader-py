@@ -32,8 +32,8 @@ item_group = []
 STATE = NORMAL
 
 av_pattern = re.compile(r'av([0-9]+)',flags=re.I)
-BV_pattern = re.compile(r'BV[0-9A-Za-z]+')
-ep_pattern = re.compile(r'(ep|md|ss)([0-9]+)')
+BV_pattern = re.compile(r'BV|bv([0-9A-Za-z]+)')
+ep_pattern = re.compile(r'(ep|md|ss|EP|MD|SS)([0-9]+)')
 
 firststart = True
 
@@ -163,7 +163,7 @@ class StateMachine:
                         item_group.append(item)
                         print("已添加av%s\n%s" % (avid,item.title))
                     elif BV_match:
-                        bvid = BV_match.group(0)
+                        bvid = 'BV'+BV_match.group(1)
                         item = bili_Video(bvid=bvid)
                         item_group.append(item)
                         print("已添加%s\n%s" % (bvid,item.title))

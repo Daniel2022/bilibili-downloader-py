@@ -120,9 +120,9 @@ def FFmpegMission(VideoName,AudioName,Outputname):
         subprocess.Popen([r'powershell', "rm \"./downloads/%s\"" % AudioName]).wait()
 
 def title_generator(title:str):
-    return title.replace("\\"," ").replace('/'," ").replace(":"," ")\
-        .replace("*"," ").replace("?"," ").replace("\""," ").replace("<"," ")\
-            .replace(">"," ").replace("|"," ").replace("”"," ").replace("“"," ")
+    return title.replace("\\","-").replace('/',"-").replace(":","-")\
+        .replace("*","-").replace("?","-").replace("\"","-").replace("<","-")\
+            .replace(">","-").replace("|","-").replace("”","-").replace("“","-")
 
 def file_exist(dir,patch):
     import re
